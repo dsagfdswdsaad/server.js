@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">Chat</div>
+    <div class="chat-container" id="chatContainer">
+      <ul id="messages"></ul>
+    </div>
+    <div class="footer">
+      <input type="text" id="nameInput" placeholder="Your Name">
+      <input type="text" id="messageInput" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:3000');
+    let username = '';
+
+    socket.onopen = function() {
+      console.log('Connected to the server');
+      setUsername();
+    };
+
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      console.log('Received message from server:', data);
+
+      const messages = document.getElementById('messages');
+      const li = document.createElement('li');
+      li.className = 'message';
+      li.innerHTML = `
+        <span class="username">${data.username}</span>: <span class="content">${data.message}</span>
+      `;
+      messages.appendChild(li);
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    };
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value;
+      if (!message) return;
+      const data = {
+        username: username,
+        message: message
+      };
+      socket.send(JSON.stringify(data));
+      input.value = '';
+    }
+
+    function setUsername() {
+      const input = document.getElementById('nameInput');
+      input.addEventListener('change', function() {
+        username = input.value;
+      });
+    }
+  </script>
+</body>
+</html>
